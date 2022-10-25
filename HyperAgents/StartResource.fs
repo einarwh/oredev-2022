@@ -74,8 +74,8 @@ let agentRef = Agent<Message>.Start (fun inbox ->
     let (state, handler) =
       match httpMethodFor ctx.Request with
       | Some GET -> 
-        let s = get ctx |> Json.serialize |> Json.format
-        (start, Successful.OK s)
+        // let s = get ctx |> Json.serialize |> Json.format
+        (start, get ctx |> Successful.OK)
       | Some POST ->
         match startPlayer ctx with
         | Started (loc, color) ->

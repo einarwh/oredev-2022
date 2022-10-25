@@ -26,6 +26,31 @@ type Message =
         Text : string
     }
 
+let siren<'T> (dataObj : 'T) : HttpHandler =
+    fun (_ : HttpFunc) (ctx : HttpContext) ->
+        ctx.SetContentType "application/vnd.siren+json; charset=utf-8"
+        let serializer = ctx.GetJsonSerializer()
+        serializer.SerializeToBytes dataObj
+        |> ctx.WriteBytesAsync    
+
+type CustomNegotiationConfig (baseConfig : INegotiationConfig) =
+    let plainText x = text (x.ToString())
+
+    interface INegotiationConfig with
+
+        member __.UnacceptableHandler =
+            baseConfig.UnacceptableHandler
+
+        member __.Rules =
+                dict [
+                    "*/*"             , json
+                    "application/json", json
+                    "application/xml" , xml
+                    "text/xml"        , xml
+                    "application/vnd.siren+json", siren
+                    "text/plain"      , plainText
+                ]
+
 // ---------------------------------
 // Views
 // ---------------------------------
@@ -109,8 +134,8 @@ let webApp =
     choose [
         route "/start" >=> 
             choose [ 
-                GET >=> sirenContent >=> startHandler >=> sirenContent
-                POST >=> sirenContent >=> startHandler
+                GET >=> startThing 
+                POST >=> startThing
             ]
         route "/mystart" >=> 
             choose [ 
@@ -140,8 +165,9 @@ let errorHandler (ex : Exception) (logger : ILogger) =
 let configureCors (builder : CorsPolicyBuilder) =
     builder
         .WithOrigins(
-            "http://localhost:5000",
-            "https://localhost:5001")
+            "http://localhost:5000")
+            // ,
+            // "https://localhost:5001")
        .AllowAnyMethod()
        .AllowAnyHeader()
        |> ignore
@@ -152,8 +178,8 @@ let configureApp (app : IApplicationBuilder) =
     | true  ->
         app.UseDeveloperExceptionPage()
     | false ->
-        app .UseGiraffeErrorHandler(errorHandler)
-            .UseHttpsRedirection())
+        app .UseGiraffeErrorHandler(errorHandler))
+            // .UseHttpsRedirection())
         .UseCors(configureCors)
         .UseStaticFiles()
         .UseGiraffe(webApp)
@@ -161,6 +187,10 @@ let configureApp (app : IApplicationBuilder) =
 let configureServices (services : IServiceCollection) =
     services.AddCors()    |> ignore
     services.AddGiraffe() |> ignore
+    services.AddSingleton<INegotiationConfig>(
+        CustomNegotiationConfig(
+            DefaultNegotiationConfig())
+    ) |> ignore
 
 let configureLogging (builder : ILoggingBuilder) =
     builder.AddConsole()
