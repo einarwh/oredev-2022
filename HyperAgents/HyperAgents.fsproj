@@ -25,11 +25,11 @@
     <Compile Include="RoomResourceUtils.fs" />
     <Compile Include="TrappableRoomResource.fs" />
     <Compile Include="TrappableRoomHandlerResource.fs" />
-    <!-- <Compile Include="LaboratoryResource.fs" />
+    <Compile Include="LaboratoryResource.fs" />
     <Compile Include="OfficeResource.fs" />
     <Compile Include="ControlRoomResource.fs" />
     <Compile Include="TeleportRoomResource.fs" />
-    <Compile Include="ExitRoomResource.fs" />
+    <!-- <Compile Include="ExitRoomResource.fs" />
     <Compile Include="PlaneResource.fs" /> -->
     <Compile Include="StartResource.fs" />
     <!-- <Compile Include="UploadResource.fs" /> -->
