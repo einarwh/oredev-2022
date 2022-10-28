@@ -22,10 +22,10 @@
     <Compile Include="SecretFileResource.fs" />
     <Compile Include="BombResource.fs" />
     <Compile Include="BombsResource.fs" />
-    <!-- <Compile Include="RoomResourceUtils.fs" />
+    <Compile Include="RoomResourceUtils.fs" />
     <Compile Include="TrappableRoomResource.fs" />
-    <Compile Include="TrappableRoomWebPartResource.fs" />
-    <Compile Include="LaboratoryResource.fs" />
+    <Compile Include="TrappableRoomHandlerResource.fs" />
+    <!-- <Compile Include="LaboratoryResource.fs" />
     <Compile Include="OfficeResource.fs" />
     <Compile Include="ControlRoomResource.fs" />
     <Compile Include="TeleportRoomResource.fs" />
