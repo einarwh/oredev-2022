@@ -56,12 +56,6 @@ let readHeader (headerName : string) (req : HttpRequest) : Choice<string, string
     if StringValues.IsNullOrEmpty v then Choice2Of2 "no such header"
     else Choice1Of2 v.[0]
 
-let httpMethodFor (req : HttpRequest) : HttpMethod option = 
-   let methodStr = req.Method 
-   if methodStr = "GET" then Some GET 
-   else if methodStr = "POST" then Some POST
-   else None 
-
 let createAgent (resourceAgentColor : string) (location : Uri) = 
   Agent<Message>.Start (fun inbox ->
   let rec alive (location : Uri) = async {

@@ -50,13 +50,8 @@ let start (agent : Color) =
   let loc = getRandomStartLocation() |> toUri |> withQueryString qs
   Started (loc, agent)
 
-let tryReadFormValue (form : IFormCollection) (key : string) : Choice<string, string> = 
-  let v = form.[key]
-  if StringValues.IsNullOrEmpty v then Choice2Of2 "no such key"
-  else Choice1Of2 v.[0]
-
 let startPlayer (ctx : HttpContext) =
-  match tryReadFormValue ctx.Request.Form "agent" with
+  match ctx.Request |> tryReadFormValue "agent" with
   | Choice1Of2 agent -> start agent
   | Choice2Of2 x -> FailedToStart
 

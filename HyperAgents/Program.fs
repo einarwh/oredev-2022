@@ -139,7 +139,7 @@ let webApp =
             ]
         route "/mystart" >=> 
             choose [ 
-                GET >=> sirenContent >=> startThing 
+                GET >=> startThing 
             ]
         route "/begin" >=> 
             choose [ 
