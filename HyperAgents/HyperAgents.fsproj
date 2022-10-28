@@ -21,8 +21,8 @@
     <Compile Include="AgentsResource.fs" />
     <Compile Include="SecretFileResource.fs" />
     <Compile Include="BombResource.fs" />
-    <!--<Compile Include="BombsResource.fs" />
-    <Compile Include="RoomResourceUtils.fs" />
+    <Compile Include="BombsResource.fs" />
+    <!-- <Compile Include="RoomResourceUtils.fs" />
     <Compile Include="TrappableRoomResource.fs" />
     <Compile Include="TrappableRoomWebPartResource.fs" />
     <Compile Include="LaboratoryResource.fs" />
