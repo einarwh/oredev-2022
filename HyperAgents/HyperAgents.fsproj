@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <Compile Include="Utils.fs" />
-    <Compile Include="HttpMethods.fs" />
+    <Compile Include="HttpUtils.fs" />
     <Compile Include="Siren.fs" />
     <Compile Include="AgentResource.fs" />
     <Compile Include="AgentsResource.fs" />

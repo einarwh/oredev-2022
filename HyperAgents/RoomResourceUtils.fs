@@ -4,7 +4,7 @@ open System
 open Chiron
 open Siren
 open Utils
-open HttpMethods
+open HttpUtils
 open Microsoft.AspNetCore.Http
 
 type RoomInfo = 

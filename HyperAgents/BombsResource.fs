@@ -2,7 +2,7 @@ module BombsResource
 
 open Utils
 open Siren
-open HttpMethods
+open HttpUtils
 open Microsoft.AspNetCore.Http
 
 type RequestInfo = HttpContext

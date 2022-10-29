@@ -5,7 +5,7 @@ open System
 open Utils
 open Siren
 open Giraffe
-open HttpMethods
+open HttpUtils
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Primitives 
 

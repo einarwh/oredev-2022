@@ -4,7 +4,7 @@ open Siren
 open TrappableRoomResource
 open Utils
 open Giraffe
-open HttpMethods
+open HttpUtils
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Primitives 
 
@@ -44,7 +44,7 @@ let agentRef = Agent<Message>.Start (fun inbox ->
       | SecretFileResource.SecretFileLocation.RoomLocation roomLoc ->
         printfn "No one has the secret file - no one can leave."
         false
-    let webPart = 
+    let handler = 
       match res with 
       | Ok doc ->
         let doc' = if planeAvailable then addPlaneLink doc else doc
@@ -60,7 +60,7 @@ let agentRef = Agent<Message>.Start (fun inbox ->
       | InternalError why ->
         ServerErrors.INTERNAL_ERROR why
 
-    webPart |> replyChannel.Reply 
+    handler |> replyChannel.Reply 
 
     return! loop()        
     }

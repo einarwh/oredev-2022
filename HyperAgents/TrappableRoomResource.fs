@@ -7,7 +7,7 @@ open Siren
 open BombResource
 open RoomResourceUtils
 open Giraffe
-open HttpMethods
+open HttpUtils
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Primitives 
 

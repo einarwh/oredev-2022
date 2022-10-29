@@ -13,7 +13,6 @@ open Chiron
 open Giraffe
 open Utils
 open Siren
-// open HttpMethods
 open FSharp.Control.Tasks  
 
 // ---------------------------------
@@ -103,7 +102,7 @@ let startHandler : HttpHandler =
 
 let roomWithAgentHandler (roomAgent : Agent<TrappableRoomHandlerResource.HandlerRoomMessage>) : HttpHandler =
   fun (next : HttpFunc) (ctx : HttpContext) ->
-    let agentColor = ctx.Request |> HttpMethods.tryReadQueryValue "agent"
+    let agentColor = ctx.Request |> HttpUtils.tryReadQueryValue "agent"
     task {
       match agentColor with 
       | Choice1Of2 clr ->
@@ -121,29 +120,28 @@ let roomWithAgentHandler (roomAgent : Agent<TrappableRoomHandlerResource.Handler
 let controlRoomHandler : HttpHandler =
   roomWithAgentHandler ControlRoomResource.agentRef
 
+let officeHandler : HttpHandler =
+  roomWithAgentHandler OfficeResource.agentRef
+
+let laboratoryHandler : HttpHandler =
+  roomWithAgentHandler LaboratoryResource.agentRef
+
+let teleportRoomHandler : HttpHandler =
+  roomWithAgentHandler TeleportRoomResource.agentRef
+
+let exitRoomHandler : HttpHandler =
+  roomWithAgentHandler ExitRoomResource.agentRef
+
 let webApp =
+    // "control-room"; "office"; "laboratory"; "teleport-room"; "exit-room"
     choose [
-        route "/start" >=> 
-            choose [ 
-                GET >=> startHandler
-                POST >=> startHandler
-            ]
-        route "/control-room" >=> 
-            choose [ 
-                GET >=> controlRoomHandler
-                POST >=> controlRoomHandler
-            ]
-        route "/mystart" >=> 
-            choose [ 
-                GET >=> startHandler
-            ]
-        route "/begin" >=> 
-            choose [ 
-                GET >=> sirenContent >=> text "GET begin"
-                POST >=> sirenContent >=> text "POST begin"
-            ]
-        route "/" >=> GET >=> indexHandler "world"
-        routef "/hello/%s" indexHandler  
+        route "/start" >=> startHandler
+        route "/control-room" >=> controlRoomHandler
+        route "/office" >=> officeHandler
+        route "/laboratory" >=> laboratoryHandler
+        route "/teleport-room" >=> teleportRoomHandler
+        route "/exit-room" >=> exitRoomHandler
+        route "/" >=> redirectTo false (linkTo "start")
         setStatusCode 404 >=> text "Not Found" ]
 
 // ---------------------------------

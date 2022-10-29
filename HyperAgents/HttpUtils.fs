@@ -1,4 +1,4 @@
-module HttpMethods
+module HttpUtils
 
 open System
 open Microsoft.AspNetCore.Http
