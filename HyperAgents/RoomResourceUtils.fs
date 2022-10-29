@@ -13,7 +13,7 @@ type RoomInfo =
     linkInfos : (string * string list) list }
 
 let getRoomWithActions1 (req : HttpRequest) (props : SirenProperties) (self : string) (linkInfos : (string * string list) list) = 
-  let qp url = url + "?" + req.QueryString.ToString()
+  let qp url = url + req.QueryString.ToString()
   let links = 
     (self |> qp |> selfLinkTo) :: (linkInfos |> List.map (fun (name, rels) -> name |> qp |> sirenLinkTo rels))
   let trappableLinks = 

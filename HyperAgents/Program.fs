@@ -132,6 +132,45 @@ let teleportRoomHandler : HttpHandler =
 let exitRoomHandler : HttpHandler =
   roomWithAgentHandler ExitRoomResource.agentRef
 
+let agentHandler agentResourceColor : HttpHandler = 
+  fun (next : HttpFunc) (ctx : HttpContext) ->
+    let requestingAgentColor = ctx.Request |> HttpUtils.tryReadQueryValue "agent"
+    task {
+      match requestingAgentColor with 
+      | Choice1Of2 clr ->
+        let! maybeRequestingAgent = AgentsResource.agentRef.PostAndAsyncReply (fun ch -> AgentsResource.Lookup(clr, ch))
+        match maybeRequestingAgent with
+        | None ->
+          return! RequestErrors.BAD_REQUEST (sprintf "no such agent %s" clr) next ctx
+        | Some requestingAgentAgent ->
+          let! maybeAgentResource = AgentsResource.agentRef.PostAndAsyncReply (fun ch -> AgentsResource.Lookup(agentResourceColor, ch))
+          match maybeAgentResource with 
+          | None ->
+            return! RequestErrors.NOT_FOUND (sprintf "no such agent %s" agentResourceColor) next ctx
+          | Some agentResource ->
+            let! result = agentResource.PostAndAsyncReply(fun ch -> AgentResource.WebMessage((ctx, clr), ch))
+            return! result next ctx
+      | Choice2Of2 x ->
+        return! RequestErrors.BAD_REQUEST x next ctx 
+    }
+
+let agentsHandler : HttpHandler = 
+  fun (next : HttpFunc) (ctx : HttpContext) ->
+    task {
+      match ctx.Request |> HttpUtils.tryReadQueryValue "agent" with
+      | Choice1Of2 agentColor -> 
+        printfn "Try lookup of %s" agentColor
+        let! maybeAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup (agentColor, ch))
+        match maybeAgent with 
+        | None ->
+          return! RequestErrors.NOT_FOUND "no" next ctx
+        | Some agent ->
+          let! result = agent.PostAndAsyncReply(fun ch -> AgentResource.WebMessage((ctx, agentColor), ch))
+          return! result next ctx
+      | Choice2Of2 x ->
+        return! RequestErrors.BAD_REQUEST x next ctx 
+    }
+
 let webApp =
     // "control-room"; "office"; "laboratory"; "teleport-room"; "exit-room"
     choose [
@@ -141,6 +180,8 @@ let webApp =
         route "/laboratory" >=> laboratoryHandler
         route "/teleport-room" >=> teleportRoomHandler
         route "/exit-room" >=> exitRoomHandler
+        routef "/agents/%s" (fun ag -> agentHandler ag)
+        route "/agents" >=> agentsHandler
         route "/" >=> redirectTo false (linkTo "start")
         setStatusCode 404 >=> text "Not Found" ]
 
