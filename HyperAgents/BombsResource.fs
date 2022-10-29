@@ -1,6 +1,5 @@
 module BombsResource
 
-open Chiron
 open Utils
 open Siren
 open HttpMethods

@@ -2,8 +2,6 @@ module TrappableRoomHandlerResource
 
 open System
 
-open Chiron
-
 open Utils
 open Siren
 open BombResource
@@ -27,11 +25,9 @@ let createAgent (roomInfo : RoomInfo) =
     let handler = 
       match res with 
       | Ok doc ->
-        let s = doc |> Json.serialize |> Json.format
-        Successful.OK s 
+        Successful.OK doc 
       | Created (doc, loc) ->
-        let s = doc |> Json.serialize |> Json.format
-        Successful.CREATED s >=> setHttpHeader "location" (loc |> uri2str)
+        Successful.CREATED doc >=> setHttpHeader "location" (loc |> uri2str)
       | Found loc ->
         redirectTo false (loc |> uri2str)
       | BadRequest why ->
@@ -43,9 +39,8 @@ let createAgent (roomInfo : RoomInfo) =
 
     handler |> replyChannel.Reply 
 
-    return! loop()        
+    return! loop()
     }
 
   loop()
 )
-

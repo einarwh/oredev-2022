@@ -13,6 +13,7 @@ open Chiron
 open Giraffe
 open Utils
 open Siren
+// open HttpMethods
 open FSharp.Control.Tasks  
 
 // ---------------------------------
@@ -93,53 +94,48 @@ let sirenContent : HttpHandler =
         ctx.SetContentType "application/vnd.siren+json"
         next ctx
 
-// let personHandler =
-//     fun (next : HttpFunc) (ctx : HttpContext) ->
-//         task {
-//             let! person = ctx.BindModelAsync<Person>()
-//             return! json person next ctx
-//         }
-
-let getStartPlayerActions =
-  let agentField = { name = "agent"; ``type`` = "text"; value = None }
-
-  let startAgentAction = 
-    { name = "start-agent"
-      ``method`` = "POST"
-      title = "Start agent"
-      href = linkTo "start"
-      fields = [ agentField ] }
-  [ startAgentAction ]
-
-let get ctx =  
-  let doc = 
-    { properties = { title = "Agent vs Agent"; description = "Welcome to the HyperAgents game!" }
-      actions = getStartPlayerActions
-      links = [ selfLinkTo "start" ] }
-  doc
-
 let startHandler : HttpHandler =
-  fun (next : HttpFunc) (ctx : HttpContext) ->
-    let jsonStrPerhaps = get ctx |> Json.serialize |> Json.format
-    Successful.OK jsonStrPerhaps next ctx
-
-let startThing : HttpHandler =
   fun (next : HttpFunc) (ctx : HttpContext) ->
     task {
       let! result = StartResource.agentRef.PostAndAsyncReply(fun ch -> (ctx, ch))
       return! result next ctx
     }
 
+let roomWithAgentHandler (roomAgent : Agent<TrappableRoomHandlerResource.HandlerRoomMessage>) : HttpHandler =
+  fun (next : HttpFunc) (ctx : HttpContext) ->
+    let agentColor = ctx.Request |> HttpMethods.tryReadQueryValue "agent"
+    task {
+      match agentColor with 
+      | Choice1Of2 clr ->
+        let! maybeAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(clr, ch))
+        match maybeAgent with
+        | None ->
+          return! RequestErrors.BAD_REQUEST (sprintf "no such agent %s" clr) next ctx
+        | Some agentAgent ->
+          let! result = roomAgent.PostAndAsyncReply(fun ch -> ((ctx, clr, agentAgent), ch))
+          return! result next ctx
+      | Choice2Of2 x ->
+        return! RequestErrors.BAD_REQUEST x next ctx 
+    }  
+
+let controlRoomHandler : HttpHandler =
+  roomWithAgentHandler ControlRoomResource.agentRef
+
 let webApp =
     choose [
         route "/start" >=> 
             choose [ 
-                GET >=> startThing 
-                POST >=> startThing
+                GET >=> startHandler
+                POST >=> startHandler
+            ]
+        route "/control-room" >=> 
+            choose [ 
+                GET >=> controlRoomHandler
+                POST >=> controlRoomHandler
             ]
         route "/mystart" >=> 
             choose [ 
-                GET >=> startThing 
+                GET >=> startHandler
             ]
         route "/begin" >=> 
             choose [ 

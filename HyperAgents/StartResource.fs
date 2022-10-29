@@ -2,7 +2,6 @@ module StartResource
 
 open System
 
-open Chiron
 open Utils
 open Siren
 open Giraffe

@@ -1,6 +1,5 @@
 module ExitRoomResource
 
-open Chiron
 open Siren
 open TrappableRoomResource
 open Utils
@@ -49,11 +48,9 @@ let agentRef = Agent<Message>.Start (fun inbox ->
       match res with 
       | Ok doc ->
         let doc' = if planeAvailable then addPlaneLink doc else doc
-        let s = doc' |> Json.serialize |> Json.format
-        Successful.OK s 
+        Successful.OK doc' 
       | Created (doc, loc) ->
-        let s = doc |> Json.serialize |> Json.format
-        Successful.CREATED s >=> setHttpHeader "location" (loc |> uri2str)
+        Successful.CREATED doc >=> setHttpHeader "location" (loc |> uri2str)
       | Found loc ->
         redirectTo false (loc |> uri2str)
       | BadRequest why ->

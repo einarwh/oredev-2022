@@ -2,7 +2,6 @@ module AgentsResource
 
 open System
 
-open Chiron
 open Utils
 open Siren
 open Giraffe

@@ -1,7 +1,5 @@
 module UploadResource
 
-open Chiron
-
 open Utils
 open Siren
 open Giraffe

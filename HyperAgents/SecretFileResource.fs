@@ -1,7 +1,6 @@
 module SecretFileResource
 
 open System
-open Chiron
 open Siren
 open Utils
 open Giraffe

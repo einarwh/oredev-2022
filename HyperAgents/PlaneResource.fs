@@ -1,6 +1,5 @@
 module PlaneResource
 
-open Chiron
 open Siren
 open Utils
 open RoomResourceUtils
@@ -21,8 +20,7 @@ let agentRef =
   Agent<Message>.Start (fun inbox ->
     let rec loop() = async {
        let! (ctx, replyChannel) = inbox.Receive()
-       doc |> Json.serialize |> Json.format |> Successful.OK |> replyChannel.Reply
+       doc |> Successful.OK |> replyChannel.Reply
        return! loop()
     }
     loop ())
-

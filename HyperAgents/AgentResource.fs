@@ -2,7 +2,6 @@ module AgentResource
 
 open System
 
-open Chiron
 open Utils
 open Siren
 open Giraffe
@@ -81,8 +80,8 @@ let createAgent (resourceAgentColor : string) (location : Uri) =
             match ctx.Request |> readHeader "referer" with 
             | Choice1Of2 url -> Some url
             | Choice2Of2 _ -> None
-          let s = getAlive resourceAgentColor referrer location requestingAgentColor false |> Json.serialize |> Json.format 
-          Successful.OK s
+          let doc = getAlive resourceAgentColor referrer location requestingAgentColor false
+          Successful.OK doc
         | _ ->
           RequestErrors.METHOD_NOT_ALLOWED "no"
       handler |> replyChannel.Reply
@@ -111,8 +110,7 @@ let createAgent (resourceAgentColor : string) (location : Uri) =
             | Choice1Of2 url -> Some url
             | Choice2Of2 _ -> None
           let doc = getAlive resourceAgentColor referrer location requestingAgentColor true 
-          let s = doc |> Json.serialize |> Json.format 
-          Successful.OK s
+          Successful.OK doc
         | _ ->
           RequestErrors.METHOD_NOT_ALLOWED "no"
       handler |> replyChannel.Reply

@@ -1,7 +1,6 @@
 module BombResource
 
 open System
-open Chiron
 open Siren
 open Utils
 open Giraffe
@@ -106,8 +105,7 @@ let createAgent referrer target =
         match httpMethodFor ctx.Request with
         | Some GET ->
           let doc = getReady ctx
-          let s = doc |> Json.serialize |> Json.format 
-          Successful.OK s
+          Successful.OK doc
         | _ ->
           RequestErrors.METHOD_NOT_ALLOWED "no"
       webPart |> replyChannel.Reply
@@ -128,8 +126,7 @@ let createAgent referrer target =
       match httpMethodFor ctx.Request with
       | Some GET ->
         let doc = getTriggered ctx
-        let s = doc |> Json.serialize |> Json.format 
-        Successful.OK s |> replyChannel.Reply
+        Successful.OK doc |> replyChannel.Reply
         return! triggered()
       | Some POST ->
         match attemptDisarm ctx target with
@@ -140,8 +137,7 @@ let createAgent referrer target =
           (* Notify: room to remove bomb. Maybe not? Just let room contain actual bomb agents, and ask for ready ones? Others are unimportant. *)
           match outcome with 
           | Disarmed doc ->
-            let s = doc |> Json.serialize |> Json.format
-            Successful.OK s |> replyChannel.Reply
+            Successful.OK doc |> replyChannel.Reply
             return! gone()
           | Explosion doc ->
             (* Notify agent of their death. *)

@@ -2,8 +2,6 @@ module TrappableRoomResource
 
 open System
 
-open Chiron
-
 open Utils
 open Siren
 open BombResource
