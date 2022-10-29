@@ -15,16 +15,7 @@ open Utils
 open Siren
 open FSharp.Control.Tasks  
 
-// ---------------------------------
-// Models
-// ---------------------------------
-
 type Agent<'T> = MailboxProcessor<'T>
-
-type Message =
-    {
-        Text : string
-    }
 
 let siren (dataObj : obj) : HttpHandler = 
     fun (_ : HttpFunc) (ctx : HttpContext) ->
@@ -52,46 +43,8 @@ type CustomNegotiationConfig (baseConfig : INegotiationConfig) =
                 ]
 
 // ---------------------------------
-// Views
-// ---------------------------------
-
-module Views =
-    open Giraffe.ViewEngine
-
-    let layout (content: XmlNode list) =
-        html [] [
-            head [] [
-                title []  [ encodedText "HyperAgents" ]
-                link [ _rel  "stylesheet"
-                       _type "text/css"
-                       _href "/main.css" ]
-            ]
-            body [] content
-        ]
-
-    let partial () =
-        h1 [] [ encodedText "HyperAgents" ]
-
-    let index (model : Message) =
-        [
-            partial()
-            p [] [ encodedText model.Text ]
-        ] |> layout
-
-// ---------------------------------
 // Web app
 // ---------------------------------
-
-let indexHandler (name : string) =
-    let greetings = sprintf "Hello %s, from Giraffe!" name
-    let model     = { Text = greetings }
-    let view      = Views.index model
-    htmlView view
-
-let sirenContent : HttpHandler = 
-    fun (next : HttpFunc) (ctx : HttpContext) ->
-        ctx.SetContentType "application/vnd.siren+json"
-        next ctx
 
 let startHandler : HttpHandler =
   fun (next : HttpFunc) (ctx : HttpContext) ->
