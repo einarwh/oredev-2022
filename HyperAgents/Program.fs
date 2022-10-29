@@ -165,10 +165,34 @@ let agentsHandler : HttpHandler =
         | None ->
           return! RequestErrors.NOT_FOUND "no" next ctx
         | Some agent ->
-          let! result = agent.PostAndAsyncReply(fun ch -> AgentResource.WebMessage((ctx, agentColor), ch))
+          let! result = agent.PostAndAsyncReply (fun ch -> AgentResource.WebMessage((ctx, agentColor), ch))
           return! result next ctx
       | Choice2Of2 x ->
         return! RequestErrors.BAD_REQUEST x next ctx 
+    }
+
+let secretFileHandler : HttpHandler =
+  fun (next : HttpFunc) (ctx : HttpContext) ->
+    let agentColor = ctx.Request |> HttpUtils.tryReadQueryValue "agent"
+    task {
+      match agentColor with 
+      | Choice1Of2 clr ->
+        let! maybeAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(clr, ch))
+        match maybeAgent with
+        | None ->
+          return! RequestErrors.BAD_REQUEST (sprintf "no such agent %s" clr) next ctx
+        | Some agentAgent ->
+          let! result = SecretFileResource.agentRef.PostAndAsyncReply(fun ch -> SecretFileResource.WebMessage((ctx, clr), ch))
+          return! result next ctx
+      | Choice2Of2 x ->
+        return! RequestErrors.BAD_REQUEST x next ctx 
+    }    
+
+let planeHandler : HttpHandler =
+  fun (next : HttpFunc) (ctx : HttpContext) ->
+    task {
+      let! result = PlaneResource.agentRef.PostAndAsyncReply (fun ch -> (ctx, ch))
+      return! result next ctx
     }
 
 let webApp =
@@ -182,6 +206,8 @@ let webApp =
         route "/exit-room" >=> exitRoomHandler
         routef "/agents/%s" (fun ag -> agentHandler ag)
         route "/agents" >=> agentsHandler
+        route "/secret-file" >=> secretFileHandler
+        route "/plane" >=> planeHandler
         route "/" >=> redirectTo false (linkTo "start")
         setStatusCode 404 >=> text "Not Found" ]
 
