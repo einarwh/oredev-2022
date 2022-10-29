@@ -26,12 +26,12 @@ type Message =
         Text : string
     }
 
-let siren<'T> (dataObj : 'T) : HttpHandler =
+let siren (dataObj : obj) : HttpHandler = 
     fun (_ : HttpFunc) (ctx : HttpContext) ->
         ctx.SetContentType "application/vnd.siren+json; charset=utf-8"
-        let serializer = ctx.GetJsonSerializer()
-        serializer.SerializeToBytes dataObj
-        |> ctx.WriteBytesAsync    
+        let doc = dataObj :?> SirenDocument
+        let str = doc |> Json.serialize |> Json.format
+        str |> ctx.WriteStringAsync
 
 type CustomNegotiationConfig (baseConfig : INegotiationConfig) =
     let plainText x = text (x.ToString())
