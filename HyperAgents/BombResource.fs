@@ -57,15 +57,15 @@ let cutWire ctx target wireColor : CutWireResult =
     getExplosion ctx target |> Explosion 
 
 let attemptDisarm (ctx : HttpContext) (target : string) : DisarmAttemptResult =  
-  match ctx.Request |> tryReadFormValue "wire" with
-  | Choice1Of2 color -> cutWire ctx target color |> Valid
-  | Choice2Of2 x -> Invalid
+  match ctx.GetFormValue "wire" with
+  | Some color -> cutWire ctx target color |> Valid
+  | None -> Invalid
 
 let getReady (ctx : HttpContext) = 
   let links = 
-    match ctx.Request |> tryReadHeaderValue "referer" with
-    | Choice1Of2 ref -> [ { rel = ["back"]; href = ref } ]
-    | Choice2Of2 _ -> []
+    match ctx.TryGetRequestHeader "referer" with
+    | Some ref -> [ { rel = ["back"]; href = ref } ]
+    | None -> []
   let doc = 
     { properties = { title = sprintf "A bomb. Hee hee."; description = "Your deviously set up bomb that is sure to catch the other agents by surprise." }
       actions = []
@@ -141,9 +141,9 @@ let createAgent referrer target =
             return! gone()
           | Explosion doc ->
             (* Notify agent of their death. *)
-            let maybeAffectedAgentColor = ctx.Request |> tryReadQueryValue "agent"
+            let maybeAffectedAgentColor = ctx.TryGetQueryStringValue "agent"
             match maybeAffectedAgentColor with
-            | Choice1Of2 affectedAgentColor ->
+            | Some affectedAgentColor ->
               printfn "Agent %s blew up." affectedAgentColor
               let! maybeAffectedAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(affectedAgentColor, ch))
               match maybeAffectedAgent with
@@ -156,7 +156,7 @@ let createAgent referrer target =
               (* Redirect to random location. *)
               let randomLink = Utils.getRandomStartLocation() |> toUri |> withQueryAgent affectedAgentColor |> uri2str
               redirectTo false randomLink |> replyChannel.Reply         
-            | Choice2Of2 x ->
+            | None ->
               printfn "Error: missing query param agent."
               RequestErrors.BAD_REQUEST "missing query param agent" |> replyChannel.Reply
             return! gone() 

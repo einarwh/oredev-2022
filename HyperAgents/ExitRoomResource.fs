@@ -62,7 +62,7 @@ let agentRef = Agent<Message>.Start (fun inbox ->
 
     handler |> replyChannel.Reply 
 
-    return! loop()        
+    return! loop()
     }
 
   loop()

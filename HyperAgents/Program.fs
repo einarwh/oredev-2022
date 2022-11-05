@@ -55,10 +55,10 @@ let startHandler : HttpHandler =
 
 let roomWithAgentHandler (roomAgent : Agent<TrappableRoomHandlerResource.HandlerRoomMessage>) : HttpHandler =
   fun (next : HttpFunc) (ctx : HttpContext) ->
-    let agentColor = ctx.Request |> HttpUtils.tryReadQueryValue "agent"
+    let maybeAgentColor = ctx.TryGetQueryStringValue "agent"
     task {
-      match agentColor with 
-      | Choice1Of2 clr ->
+      match maybeAgentColor with 
+      | Some clr ->
         let! maybeAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(clr, ch))
         match maybeAgent with
         | None ->
@@ -66,8 +66,8 @@ let roomWithAgentHandler (roomAgent : Agent<TrappableRoomHandlerResource.Handler
         | Some agentAgent ->
           let! result = roomAgent.PostAndAsyncReply(fun ch -> ((ctx, clr, agentAgent), ch))
           return! result next ctx
-      | Choice2Of2 x ->
-        return! RequestErrors.BAD_REQUEST x next ctx 
+      | None ->
+        return! RequestErrors.BAD_REQUEST "missing agent query parameter" next ctx 
     }  
 
 let controlRoomHandler : HttpHandler =
@@ -87,10 +87,10 @@ let exitRoomHandler : HttpHandler =
 
 let agentHandler agentResourceColor : HttpHandler = 
   fun (next : HttpFunc) (ctx : HttpContext) ->
-    let requestingAgentColor = ctx.Request |> HttpUtils.tryReadQueryValue "agent"
+    let requestingAgentColor = ctx.TryGetQueryStringValue "agent"
     task {
       match requestingAgentColor with 
-      | Choice1Of2 clr ->
+      | Some clr ->
         let! maybeRequestingAgent = AgentsResource.agentRef.PostAndAsyncReply (fun ch -> AgentsResource.Lookup(clr, ch))
         match maybeRequestingAgent with
         | None ->
@@ -103,15 +103,15 @@ let agentHandler agentResourceColor : HttpHandler =
           | Some agentResource ->
             let! result = agentResource.PostAndAsyncReply(fun ch -> AgentResource.WebMessage((ctx, clr), ch))
             return! result next ctx
-      | Choice2Of2 x ->
-        return! RequestErrors.BAD_REQUEST x next ctx 
+      | None ->
+        return! RequestErrors.BAD_REQUEST "missing agent query parameter" next ctx 
     }
 
 let agentsHandler : HttpHandler = 
   fun (next : HttpFunc) (ctx : HttpContext) ->
     task {
-      match ctx.Request |> HttpUtils.tryReadQueryValue "agent" with
-      | Choice1Of2 agentColor -> 
+      match ctx.TryGetQueryStringValue "agent" with
+      | Some agentColor -> 
         printfn "Try lookup of %s" agentColor
         let! maybeAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup (agentColor, ch))
         match maybeAgent with 
@@ -120,16 +120,16 @@ let agentsHandler : HttpHandler =
         | Some agent ->
           let! result = agent.PostAndAsyncReply (fun ch -> AgentResource.WebMessage((ctx, agentColor), ch))
           return! result next ctx
-      | Choice2Of2 x ->
-        return! RequestErrors.BAD_REQUEST x next ctx 
+      | None ->
+        return! RequestErrors.BAD_REQUEST "missing agent query parameter" next ctx 
     }
 
 let secretFileHandler : HttpHandler =
   fun (next : HttpFunc) (ctx : HttpContext) ->
-    let agentColor = ctx.Request |> HttpUtils.tryReadQueryValue "agent"
+    let maybeAgentColor = ctx.TryGetQueryStringValue "agent"
     task {
-      match agentColor with 
-      | Choice1Of2 clr ->
+      match maybeAgentColor with 
+      | Some clr ->
         let! maybeAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(clr, ch))
         match maybeAgent with
         | None ->
@@ -137,8 +137,8 @@ let secretFileHandler : HttpHandler =
         | Some agentAgent ->
           let! result = SecretFileResource.agentRef.PostAndAsyncReply(fun ch -> SecretFileResource.WebMessage((ctx, clr), ch))
           return! result next ctx
-      | Choice2Of2 x ->
-        return! RequestErrors.BAD_REQUEST x next ctx 
+      | None ->
+        return! RequestErrors.BAD_REQUEST "missing agent query parameter" next ctx 
     }    
 
 let planeHandler : HttpHandler =

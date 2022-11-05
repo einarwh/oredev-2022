@@ -50,15 +50,9 @@ let start (agent : Color) =
   Started (loc, agent)
 
 let startPlayer (ctx : HttpContext) =
-  match ctx.Request |> tryReadFormValue "agent" with
-  | Choice1Of2 agent -> start agent
-  | Choice2Of2 x -> FailedToStart
-
-let httpMethodFor (req : HttpRequest) : HttpMethod option = 
-   let methodStr = req.Method 
-   if methodStr = "GET" then Some GET 
-   else if methodStr = "POST" then Some POST
-   else None 
+  match ctx.GetFormValue "agent" with
+  | Some agent -> start agent
+  | None -> FailedToStart
 
 let agentRef = Agent<Message>.Start (fun inbox ->
   let rec start() = async {

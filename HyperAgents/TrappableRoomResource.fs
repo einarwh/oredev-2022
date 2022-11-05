@@ -76,8 +76,8 @@ let getTrapped
      (others : AgentColor list) 
      (roomInfo : RoomInfo)
      (secretFileIsHere : bool): TrappedResult = 
-  match ctx.Request |> tryReadHeaderValue "referer" with
-  | Choice1Of2 ref ->
+  match ctx.TryGetRequestHeader "referer" with
+  | Some ref ->
     match bombs |> List.tryFind (fun { id = id; referrer = referrer; agent = agent } -> bombMatch ref referrer) with
     | None ->
       getRoom ctx clr others roomInfo secretFileIsHere |> SafeEntry
@@ -85,7 +85,7 @@ let getTrapped
       let bombResourceUrl = sprintf "http://127.0.0.1:8083/bombs/%d?agent=%s" id clr
       let bomb = bombResourceUrl |> toUri 
       TriggeredBomb (id, bombResourceUrl |> toUri)
-  | _ ->
+  | None ->
     getRoom ctx clr others roomInfo secretFileIsHere |> SafeEntry
 
 let createAgent (roomInfo : RoomInfo) = 
@@ -129,20 +129,20 @@ let createAgent (roomInfo : RoomInfo) =
             Found loc |> replyChannel.Reply
           return! loop activeBombs
       | Some POST ->
-        match ctx.Request |> tryReadFormValue "bomb-referrer" with
-        | Choice1Of2 ref ->
+        match ctx.GetFormValue "bomb-referrer" with
+        | Some ref ->
           let uri = ctx.Request |> getUri
           let target = uri |> uri2str
           let! bombId = BombsResource.agentRef.PostAndAsyncReply(fun ch -> BombsResource.Register(BombResource.createAgent ref target, ch))
           let! bombAgent = BombsResource.agentRef.PostAndAsyncReply(fun ch -> BombsResource.Lookup(bombId, ch))
-          let bombResourceUrl = sprintf "http://127.0.0.1:8083/bombs/%d" bombId
+          let bombResourceUrl = sprintf "bombs/%d" bombId |> linkTo
           let urlWithQuery = bombResourceUrl |> toUri |> withQueryString ("agent=" + clr)
           let doc = getRoom ctx clr otherAgents roomInfo secretFileIsHere
           Created (doc, urlWithQuery) |> replyChannel.Reply
           let bomb = { id = bombId; referrer = ref; agent = bombAgent.Value }
           return! loop (bomb :: bombs)
-        | Choice2Of2 why ->
-          BadRequest why |> replyChannel.Reply
+        | None ->
+          BadRequest "missing bomb-referrer" |> replyChannel.Reply
           return! loop bombs
       | _ -> 
         MethodNotAllowed "no" |> replyChannel.Reply
