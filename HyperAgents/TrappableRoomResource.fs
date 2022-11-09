@@ -82,7 +82,7 @@ let getTrapped
     | None ->
       getRoom ctx clr others roomInfo secretFileIsHere |> SafeEntry
     | Some { id = id; referrer = referrer; agent = agent } ->
-      let bombResourceUrl = sprintf "http://127.0.0.1:8083/bombs/%d?agent=%s" id clr
+      let bombResourceUrl = sprintf "http://localhost:5000/bombs/%d?agent=%s" id clr
       let bomb = bombResourceUrl |> toUri 
       TriggeredBomb (id, bombResourceUrl |> toUri)
   | None ->

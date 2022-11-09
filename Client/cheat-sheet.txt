@@ -1,0 +1,4 @@
+game.to('http://localhost:5000/start', 'application/vnd.siren+json')
+
+game.do('start-agent', { agent: 'black' })
+

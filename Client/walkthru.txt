@@ -1,0 +1,132 @@
+game.to('http://localhost:3000/hywit/void') -> void
+
+game.all
+
+game.action('start-adventure')
+
+game.do('start-adventure', { name: 'Foodoo', class: 'Burglar', race: 'Halfling', gender: 'Male' })
+
+game.follow() -> hill
+
+game.all
+
+game.links
+
+game.go(1) -> brook
+
+game.all
+
+game.go(2) -> sign
+
+game.all
+
+game.action('turn-sign')
+
+game.do('turn-sign', { orientation: 'Left-to-right' })
+
+game.all
+
+game.go(1) -> brook
+
+game.all
+
+game.go(1) -> hill
+
+game.all
+
+game.go(2) -> entrance
+
+game.all
+
+game.go(1) -> tower
+
+game.all
+
+game.action('answer-skull')
+
+game.do('answer-skull', { master: 'Quux' })
+
+game.all
+
+game.go(0); -> entrance
+
+game.all
+
+game.go(1); -> tower
+
+game.all
+
+game.do('answer-skull', { master: 'Edsger' })
+
+game.follow() -> hall
+
+game.all
+
+game.go(3) -> teapot
+
+game.follow() -> hall
+
+game.all
+
+game.go(1) -> mirrors
+
+game.all
+
+game.properties
+
+game.actions
+
+game.links
+
+game.links[1]
+
+game.go(5) -> some mirror
+
+game.go(1) -> mirrors
+
+game.go(1) -> room
+
+game.all
+
+game.go(1) -> mirrors
+
+# Repeat until no smash-mirror actions left:
+
+game.actions
+
+game.action('smash-mirror-X')
+
+game.follow() -> mirrors
+
+game.all
+
+# Done
+
+game.action('enter-mirror-Y');
+
+game.follow() -> mirrors
+
+game.all
+
+game.go(3) -> mirror Y
+
+game.all
+
+game.go(1) -> mirrors
+
+game.links
+
+game.go(1) -> room
+
+game.all
+
+game.go(2) -> study
+
+game.all
+
+# Please choose your final step carefully.
+
+
+
+
+

@@ -85,7 +85,7 @@ let teleportRoomHandler : HttpHandler =
 let exitRoomHandler : HttpHandler =
   roomWithAgentHandler ExitRoomResource.agentRef
 
-let agentHandler agentResourceColor : HttpHandler = 
+let agentHandler (agentResourceColor : string) : HttpHandler = 
   fun (next : HttpFunc) (ctx : HttpContext) ->
     let requestingAgentColor = ctx.TryGetQueryStringValue "agent"
     task {
@@ -106,6 +106,19 @@ let agentHandler agentResourceColor : HttpHandler =
       | None ->
         return! RequestErrors.BAD_REQUEST "missing agent query parameter" next ctx 
     }
+
+let bombHandler (bombId : int) : HttpHandler = 
+  fun (next : HttpFunc) (ctx : HttpContext) ->
+  task {
+    printfn "Lookup bomb #%d" bombId
+    let! maybeBomb = BombsResource.agentRef.PostAndAsyncReply(fun ch -> BombsResource.Lookup (bombId, ch))
+    match maybeBomb with
+    | None ->
+      return! RequestErrors.NOT_FOUND "no such bomb" next ctx
+    | Some bomb -> 
+      let! result = bomb.PostAndAsyncReply(fun ch -> BombResource.WebMessage(ctx, ch))
+      return! result next ctx
+  }
 
 let agentsHandler : HttpHandler = 
   fun (next : HttpFunc) (ctx : HttpContext) ->
@@ -158,6 +171,7 @@ let webApp =
         route "/teleport-room" >=> teleportRoomHandler
         route "/exit-room" >=> exitRoomHandler
         routef "/agents/%s" (fun ag -> agentHandler ag)
+        routef "/bombs/%i" (fun id -> bombHandler id)
         route "/agents" >=> agentsHandler
         route "/secret-file" >=> secretFileHandler
         route "/plane" >=> planeHandler
