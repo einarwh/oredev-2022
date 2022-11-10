@@ -28,7 +28,7 @@ type BombInfo =
 let getUrl (req : HttpRequest) : string = 
     req.GetEncodedUrl()
 
-let getDisarmed (ctx : HttpContext) (target : string) : SirenDocument = 
+let getDisarmed (ctx : HttpContext) (backUrl : Uri) : SirenDocument = 
   let url = ctx.Request |> getUrl 
   { properties = 
       { title = "Disarmed bomb"
@@ -36,9 +36,9 @@ let getDisarmed (ctx : HttpContext) (target : string) : SirenDocument =
     actions = []
     links = 
       [ { rel = [ "self" ]; href = url.ToString() } 
-        { rel = [ "back" ]; href = target } ] }
+        { rel = [ "back" ]; href = backUrl.ToString() } ] }
 
-let getExplosion (ctx : HttpContext) (target : string) : SirenDocument = 
+let getExplosion (ctx : HttpContext) (backUrl : Uri) : SirenDocument = 
   let url = ctx.Request |> getUrl 
   { properties = 
       { title = "Exploding bomb"
@@ -46,19 +46,19 @@ let getExplosion (ctx : HttpContext) (target : string) : SirenDocument =
     actions = []
     links = 
       [ { rel = [ "self" ]; href = url.ToString() } 
-        { rel = [ "back" ]; href = target } ] }
+        { rel = [ "back" ]; href = backUrl.ToString() } ] }
 
-let cutWire ctx target wireColor : CutWireResult =
+let cutWire (ctx : HttpContext) (backUrl : Uri) (wireColor : string) : CutWireResult =
   printfn "Cutting the %s wire" wireColor
   match wireColor with
   | "red" ->
-    getDisarmed ctx target |> Disarmed
+    getDisarmed ctx backUrl |> Disarmed
   | _ ->
-    getExplosion ctx target |> Explosion 
+    getExplosion ctx backUrl |> Explosion 
 
-let attemptDisarm (ctx : HttpContext) (target : string) : DisarmAttemptResult =  
+let attemptDisarm (ctx : HttpContext) (backUrl : Uri) : DisarmAttemptResult =  
   match ctx.GetFormValue "wire" with
-  | Some color -> cutWire ctx target color |> Valid
+  | Some wireColor -> cutWire ctx backUrl wireColor |> Valid
   | None -> Invalid
 
 let getReady (ctx : HttpContext) = 
@@ -101,14 +101,14 @@ let createAgent referrer target =
     | TriggerNotification ->
       return! triggered()
     | WebMessage (ctx, replyChannel) ->
-      let webPart = 
+      let handler = 
         match httpMethodFor ctx.Request with
         | Some GET ->
           let doc = getReady ctx
           Successful.OK doc
         | _ ->
           RequestErrors.METHOD_NOT_ALLOWED "no"
-      webPart |> replyChannel.Reply
+      handler |> replyChannel.Reply
       return! ready() }
 
   and triggered() = async {
@@ -129,37 +129,43 @@ let createAgent referrer target =
         Successful.OK doc |> replyChannel.Reply
         return! triggered()
       | Some POST ->
-        match attemptDisarm ctx target with
-        | Invalid ->
-          RequestErrors.BAD_REQUEST "no" |> replyChannel.Reply
-          return! triggered()
-        | Valid outcome ->
-          (* Notify: room to remove bomb. Maybe not? Just let room contain actual bomb agents, and ask for ready ones? Others are unimportant. *)
-          match outcome with 
-          | Disarmed doc ->
-            Successful.OK doc |> replyChannel.Reply
-            return! gone()
-          | Explosion doc ->
-            (* Notify agent of their death. *)
-            let maybeAffectedAgentColor = ctx.TryGetQueryStringValue "agent"
-            match maybeAffectedAgentColor with
-            | Some affectedAgentColor ->
-              printfn "Agent %s blew up." affectedAgentColor
-              let! maybeAffectedAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(affectedAgentColor, ch))
-              match maybeAffectedAgent with
+        let maybeRequestingAgentColor = ctx.TryGetQueryStringValue "agent"
+        match ctx.TryGetQueryStringValue "agent" with 
+        | Some requestingAgentColor -> 
+          let backUrl = target |> toUri |> withoutQueryString |> withQueryAgent requestingAgentColor
+          match attemptDisarm ctx backUrl with
+          | Invalid ->
+            RequestErrors.BAD_REQUEST "no" |> replyChannel.Reply
+            return! triggered()
+          | Valid outcome ->
+            (* Notify: room to remove bomb. Maybe not? Just let room contain actual bomb agents, and ask for ready ones? Others are unimportant. *)
+            match outcome with 
+            | Disarmed doc ->
+              Successful.OK doc |> replyChannel.Reply
+              return! gone()
+            | Explosion doc ->
+              (* Notify agent of their death. *)
+              let maybeAffectedAgentColor = ctx.TryGetQueryStringValue "agent"
+              match maybeAffectedAgentColor with
+              | Some affectedAgentColor ->
+                printfn "Agent %s blew up." affectedAgentColor
+                let! maybeAffectedAgent = AgentsResource.agentRef.PostAndAsyncReply(fun ch -> AgentsResource.Lookup(affectedAgentColor, ch))
+                match maybeAffectedAgent with
+                | None ->
+                  printfn "Error: agent %s not found in registry." affectedAgentColor
+                | Some affectedAgent ->
+                  affectedAgent.Post(AgentResource.ExplodingBombNotification)
+                  (* The agent drops the secret file when they die. *)
+                  target |> toUri |> SecretFileResource.Dropped |> SecretFileResource.agentRef.Post
+                (* Redirect to random location. *)
+                let randomLink = Utils.getRandomStartLocation() |> toUri |> withQueryAgent affectedAgentColor |> uri2str
+                redirectTo false randomLink |> replyChannel.Reply         
               | None ->
-                printfn "Error: agent %s not found in registry." affectedAgentColor
-              | Some affectedAgent ->
-                affectedAgent.Post(AgentResource.ExplodingBombNotification)
-                (* The agent drops the secret file when they die. *)
-                target |> toUri |> SecretFileResource.Dropped |> SecretFileResource.agentRef.Post
-              (* Redirect to random location. *)
-              let randomLink = Utils.getRandomStartLocation() |> toUri |> withQueryAgent affectedAgentColor |> uri2str
-              redirectTo false randomLink |> replyChannel.Reply         
-            | None ->
-              printfn "Error: missing query param agent."
-              RequestErrors.BAD_REQUEST "missing query param agent" |> replyChannel.Reply
-            return! gone() 
+                printfn "Error: missing query param agent."
+                RequestErrors.BAD_REQUEST "missing query param agent" |> replyChannel.Reply
+              return! gone() 
+        | None -> 
+          RequestErrors.BAD_REQUEST "missing agent query parameter" |> replyChannel.Reply 
       | _ ->
         RequestErrors.METHOD_NOT_ALLOWED "no" |> replyChannel.Reply
         return! triggered() }
