@@ -2,6 +2,10 @@
 
 Agent vs Agent is a multiplayer hypermedia based text-only adventure game inspired by the Spy vs Spy game for the C64. 
 
+The game server is written in F# with Giraffe. You will need .NET installed. The version of .NET I have installed is 5.0. I haven't tried it with other versions.
+
+The game client is written in Node. You will need Node and npm installed, and to do the `npm install` thing.
+
 To start the game server: navigate to the HyperAgents folder and type `dotnet run`.
 
 To start a game client: navigate to the Client folder and type `node run.js`. You can start as many clients as you like, since this is web scale. 
