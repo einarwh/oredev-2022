@@ -49,7 +49,7 @@ let addSecretFileIfPresent secretFileIsHere roomInfo =
     let props = roomInfo.properties
     let addition = " But wait - you have found the secret file! Grab it!"
     let properties' = { props with description = props.description + addition }
-    let secretFileLinkInfo = ("secret-file", [ "look" ])
+    let secretFileLinkInfo = ("secret-file", [ "inspect-file" ])
     let linkInfos' = roomInfo.linkInfos @ [ secretFileLinkInfo ]
     { roomInfo with properties = properties'
                     linkInfos = linkInfos' }

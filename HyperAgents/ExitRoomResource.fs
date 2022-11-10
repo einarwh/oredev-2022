@@ -17,13 +17,13 @@ let roomInfo : RoomResourceUtils.RoomInfo =
       { title = "The exit room." 
         description = "You're in the exit room. Do you have the secret files? Then you should get out of here!" }
     linkInfos = 
-      [ ("control-room", ["entrance"; "move"]) ]
+      [ ("control-room", ["control-room"; "entrance"]) ]
   }
 
 let agentRef = Agent<Message>.Start (fun inbox ->
 
   let addPlaneLink (doc : SirenDocument) =
-    let planeLink = { rel = [ "move" ]; href = linkTo "plane"}
+    let planeLink = { rel = [ "escape" ]; href = linkTo "plane"}
     let links' = doc.links @ [planeLink]
     { doc with links = links' }
 

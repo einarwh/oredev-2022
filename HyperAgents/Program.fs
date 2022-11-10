@@ -11,18 +11,102 @@ open Microsoft.Extensions.DependencyInjection
 open Microsoft.AspNetCore.Http
 open Chiron
 open Giraffe
+open Giraffe.ViewEngine
 open Utils
 open Siren
 open FSharp.Control.Tasks  
 
 type Agent<'T> = MailboxProcessor<'T>
 
-let siren (dataObj : obj) : HttpHandler = 
+let sirenHandler (dataObj : obj) : HttpHandler = 
     fun (_ : HttpFunc) (ctx : HttpContext) ->
         ctx.SetContentType "application/vnd.siren+json; charset=utf-8"
         let doc = dataObj :?> SirenDocument
         let str = doc |> Json.serialize |> Json.format
         str |> ctx.WriteStringAsync
+
+let sirenLinkAsHtml (link : SirenLink) : XmlNode = 
+  let linkText = link.rel |> List.head
+  a [ _href link.href ] [ str linkText ]
+
+let sirenLinkAsListItem (link : SirenLink) : XmlNode = 
+  li [] [ sirenLinkAsHtml link ]
+
+(*
+<form method="POST" action="/start"><input id="name" name="name" type="input" /><label for="name">What is your name, explorer?</label><br/><input type="submit" value="Start"></form>
+
+<form method="POST" action="http://localhost:5000/start"><input id="agent" type="text"><label for="agent">agent</label><input type="submit" value="Start agent"></form>
+
+type SirenAction = 
+  { name: string
+    title: string
+    ``method``: string
+    href: SirenHref
+    fields: SirenField list }
+
+type SirenField = 
+  { name: string
+    ``type``: string
+    value: Json option }
+
+*)
+
+let sirenFieldAsInputAndLabel (field : SirenField) : XmlNode list = 
+  let valueAttrs : XmlAttribute list = 
+    match field.value with 
+    | Some jsonValue -> 
+      let strValue : string = jsonValue |> Json.serialize |> Json.format
+      [ _value strValue ]
+    | None -> [] 
+  let attrs = [ _id field.name; _name field.name; _type field.``type`` ] @ valueAttrs
+  [
+    input attrs
+    label [ _for field.name ] [ str field.name ]
+  ]
+
+let sirenActionAsHtml (action : SirenAction) : XmlNode = 
+  let fieldThings = action.fields |> List.collect sirenFieldAsInputAndLabel
+  let submitElement = input [ _type "submit"; _value action.title ]
+  let formElements = fieldThings @ [ br []; submitElement ]
+  form [ _method action.method; _action action.href ] formElements
+
+let sirenPropertiesAsHtml (props : SirenProperties) : XmlNode = 
+  div [] [ 
+    h1 [] [ str props.title ]
+    p [] [ str props.description ]
+  ]
+
+let sirenDocumentAsHtml (doc : SirenDocument) : XmlNode = 
+  let linkItems = doc.links |> List.map sirenLinkAsListItem
+  let linksList = ul [] linkItems
+  let navigationSection = h3 [] [ str "Navigation" ] :: [ linksList ]
+  let actionSection = 
+    match doc.actions with 
+    | [] -> [] 
+    | _ -> 
+      let actionHtml = doc.actions |> List.map sirenActionAsHtml
+      h3 [] [ str "Actions" ] :: actionHtml
+  let props = doc.properties |> sirenPropertiesAsHtml
+  div [] [
+    props
+    p [] navigationSection
+    p [] actionSection
+  ]
+
+let htmlHandler (dataObj : obj) : HttpHandler = 
+    fun (_ : HttpFunc) (ctx : HttpContext) ->
+        ctx.SetContentType "text/html; charset=utf-8"
+        let doc = dataObj :?> SirenDocument
+
+        let page = html [] [
+          head [] []
+          body [] [
+            doc |> sirenDocumentAsHtml
+          ]
+        ]
+        let str = page |> RenderView.AsString.htmlNode
+        str |> ctx.WriteStringAsync
+
 
 type CustomNegotiationConfig (baseConfig : INegotiationConfig) =
     let plainText x = text (x.ToString())
@@ -34,12 +118,13 @@ type CustomNegotiationConfig (baseConfig : INegotiationConfig) =
 
         member __.Rules =
                 dict [
-                    "*/*"             , json
+                    "*/*", sirenHandler
                     "application/json", json
-                    "application/xml" , xml
-                    "text/xml"        , xml
-                    "application/vnd.siren+json", siren
-                    "text/plain"      , plainText
+                    "application/xml", xml
+                    "text/xml", xml
+                    "application/vnd.siren+json", sirenHandler
+                    "text/html", htmlHandler
+                    "text/plain", plainText
                 ]
 
 // ---------------------------------

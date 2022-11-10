@@ -9,8 +9,8 @@ let roomInfo : RoomResourceUtils.RoomInfo =
       { title = "The teleportation room." 
         description = "You're in the teleportation room. Lo and behold, there a teleportation device here. Who would have guessed?" }
     linkInfos = 
-      [ ("laboratory", ["entrance"; "move"])
-        ("exit-room", ["teleport"; "move"]) ]
+      [ ("laboratory", ["laboratory"; "entrance"])
+        ("exit-room", ["use-device"]) ]
   }
 
 let agentRef = Agent<HandlerRoomMessage>.Start (fun inbox ->
@@ -19,7 +19,7 @@ let agentRef = Agent<HandlerRoomMessage>.Start (fun inbox ->
     let! (input, replyChannel) = inbox.Receive()
     let! response = trappableRoomAgent.PostAndAsyncReply(fun ch -> (input, ch))
     response |> replyChannel.Reply
-    return! loop()        
+    return! loop()
     }
 
   loop()

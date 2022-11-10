@@ -9,9 +9,9 @@ let roomInfo : RoomResourceUtils.RoomInfo =
       { title = "The control room." 
         description = "The room you have entered is full of screens, buttons, flashing lights and beeping. Should you press a button? Which one?" }
     linkInfos = 
-      [ ("office", ["entrance"; "move"])
-        ("laboratory", ["entrance"; "move"])
-        ("exit-room", ["entrance"; "move"]) ]
+      [ ("office", ["office"; "entrance"])
+        ("laboratory", ["laboratory"; "entrance"])
+        ("exit-room", ["exit-room"; "entrance"]) ]
   }
 
 let agentRef = Agent<HandlerRoomMessage>.Start (fun inbox ->
