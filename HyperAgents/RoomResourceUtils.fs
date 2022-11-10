@@ -38,7 +38,7 @@ let getRoomWithActions1 (req : HttpRequest) (props : SirenProperties) (self : st
       let dstResource = (uri |> noqp).ToString() |> pickResourceName
       { plantBombAction with name = sprintf "%s-%d" plantBombAction.name i
                              title = sprintf "Place bomb on entrance %s => %s" srcResource dstResource  
-                             fields = [ { name = "bomb-referrer"; ``type`` = "text"; value = Some (String <| lnk.ToString())} ]})
+                             fields = [ { name = "bomb-referrer"; ``type`` = "text"; value = Some (lnk.ToString())} ]})
 
   let doc = 
     { properties = props 

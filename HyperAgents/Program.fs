@@ -54,9 +54,8 @@ type SirenField =
 let sirenFieldAsInputAndLabel (field : SirenField) : XmlNode list = 
   let valueAttrs : XmlAttribute list = 
     match field.value with 
-    | Some jsonValue -> 
-      let strValue : string = jsonValue |> Json.serialize |> Json.format
-      [ _value strValue ]
+    | Some v -> 
+      [ _value v ]
     | None -> [] 
   let attrs = [ _id field.name; _name field.name; _type field.``type`` ] @ valueAttrs
   [

@@ -10,7 +10,7 @@ type SirenHref = string
 type SirenField = 
   { name: string
     ``type``: string
-    value: Json option }
+    value: string option }
  
   static member ToJson (x : SirenField) = json {
     if x.value.IsSome then do! Json.write "value" x.value.Value
