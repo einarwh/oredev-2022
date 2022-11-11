@@ -38,7 +38,7 @@ let addOtherAgentsIfPresent others roomInfo =
                     linkInfos = linkInfos' }
   | lst ->
     let props = roomInfo.properties
-    let peskyAgentNames = String.Join(", ", lst)
+    let peskyAgentNames = lst |> String.concat ", "
     let addition = peskyAgentNames |> sprintf " The following pesky agents are here: %s."
     let enemyLinkInfos = lst |> List.map (fun a -> enemyLinkInfo a)
     let linkInfos' = roomInfo.linkInfos @ enemyLinkInfos
