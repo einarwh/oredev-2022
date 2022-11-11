@@ -9,6 +9,7 @@ type SirenHref = string
 
 type SirenField = 
   { name: string
+    title : string option
     ``type``: string
     value: string option }
  

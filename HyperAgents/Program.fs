@@ -55,9 +55,13 @@ let sirenFieldAsInputAndLabel (field : SirenField) : XmlNode list =
   match field.value with 
   | None -> 
     // Need input from the player.
+    let fieldText = 
+      match field.title with 
+      | Some title -> title 
+      | None -> field.name
     [
       input [ _id field.name; _name field.name; _type field.``type`` ]
-      label [ _for field.name ] [ str field.name ]
+      label [ _for field.name ] [ str fieldText ]
     ]
   | Some v -> 
     // Use hidden input.

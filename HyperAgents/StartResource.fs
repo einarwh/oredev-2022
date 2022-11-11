@@ -20,7 +20,11 @@ type Color = string
 type StartPlayerResult = Started of Uri * Color | FailedToStart
 
 let getStartPlayerActions =
-  let agentField = { name = "agent"; ``type`` = "text"; value = None }
+  let agentField = 
+    { name = "agent"
+      title = Some "Coat color"
+      ``type`` = "text"
+      value = None }
 
   let startAgentAction = 
     { name = "start-agent"

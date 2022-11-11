@@ -74,7 +74,7 @@ let getReady (ctx : HttpContext) =
 
 let getTriggered (ctx : HttpContext) = 
   let url = ctx.Request |> getUri
-  let cutWireField = { name = "wire"; ``type`` = "text"; value = None }
+  let cutWireField = { name = "wire"; title = Some "Color of wire to cut"; ``type`` = "text"; value = None }
   let cutWireAction = 
     { name = "cut-wire"
       ``method`` = "POST"
