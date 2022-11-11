@@ -52,17 +52,19 @@ type SirenField =
 *)
 
 let sirenFieldAsInputAndLabel (field : SirenField) : XmlNode list = 
-  let valueAttrs : XmlAttribute list = 
-    match field.value with 
-    | Some v -> 
-      [ _value v ]
-    | None -> [] 
-  let attrs = [ _id field.name; _name field.name; _type field.``type`` ] @ valueAttrs
-  [
-    input attrs
-    label [ _for field.name ] [ str field.name ]
-  ]
-
+  match field.value with 
+  | None -> 
+    // Need input from the player.
+    [
+      input [ _id field.name; _name field.name; _type field.``type`` ]
+      label [ _for field.name ] [ str field.name ]
+    ]
+  | Some v -> 
+    // Use hidden input.
+    [
+      input [ _id field.name; _name field.name; _type "hidden"; _value v ]
+    ]
+    
 let sirenActionAsHtml (action : SirenAction) : XmlNode = 
   let fieldThings = action.fields |> List.collect sirenFieldAsInputAndLabel
   let submitElement = input [ _type "submit"; _value action.title ]
