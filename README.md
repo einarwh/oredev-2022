@@ -2,7 +2,7 @@
 
 Agent vs Agent is a multiplayer hypermedia based text-only adventure game inspired by the Spy vs Spy game for the C64. 
 
-The game server is written in F# with Giraffe. You will need .NET installed. The version of .NET I have installed is 5.0. I haven't tried it with other versions.
+The game server is written in F# with Giraffe. You will need .NET installed. The version of .NET I have installed is 7.0. I haven't tried it with other versions.
 
 The game client is written in Node. You will need Node and npm installed, and to do the `npm install` thing.
 
